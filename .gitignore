@@ -1,0 +1,17 @@
+# Python
+# Ignore virtual environment
+venv/
+
+# Ignore Python bytecode
+__pycache__/
+
+# Compiled Python files (Python 3.5+)
+*.pyc
+*.pyo
+*.pyd
+
+# macOS
+.DS_Store
+
+# IDEs and editors
+.vscode/
