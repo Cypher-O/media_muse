@@ -1,6 +1,6 @@
-# Contributing to Video Player App
+# Contributing to Media Muse App
 
-First of all, thank you for considering contributing to the Video Player App! Contributions from developers like you are what make this project great.
+First of all, thank you for considering contributing to the Media Muse App! Contributions from developers like you are what make this project great.
 
 ## Code of Conduct
 
@@ -10,7 +10,7 @@ Before you start contributing, please read and adhere to our [Code of Conduct](C
 
 ### Reporting Bugs
 
-If you encounter a bug in the application or have a feature request, please open an issue on the [issue tracker](https://github.com/Cypher-O/video_player/issues). When reporting bugs, please include steps to reproduce the issue and any relevant details about your environment.
+If you encounter a bug in the application or have a feature request, please open an issue on the [issue tracker](https://github.com/Cypher-O/media_muse/issues). When reporting bugs, please include steps to reproduce the issue and any relevant details about your environment.
 
 ### Submitting Changes
 
@@ -19,8 +19,8 @@ If you have implemented a bug fix or added a new feature that you would like to 
 1. Fork the repository and create your branch from `main`.
 
     ```bash
-    git clone https://github.com/Cypher-O/video_player.git
-    cd video_player
+    git clone https://github.com/Cypher-O/media_muse.git
+    cd media_muse
     git checkout -b my-contribution
     ```
 

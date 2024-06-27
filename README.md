@@ -1,6 +1,6 @@
-# Video Player App
+# Media Muse App
 
-This Python-based Video Player application allows users to playback media files with a comprehensive set of controls and features. It integrates with the VLC media player for robust media handling and provides an intuitive interface for managing playlists, subtitles, and playback options.
+This Python-based Media Muse application allows users to playback media files with a comprehensive set of controls and features. It integrates with the VLC media player for robust media handling and provides an intuitive interface for managing playlists, subtitles, and playback options.
 
 ## Features
 
@@ -25,8 +25,8 @@ This Python-based Video Player application allows users to playback media files 
 1. Clone the repository:
 
     ```sh
-    git clone https://github.com/Cypher-O/video_player.git
-    cd video_player
+    git clone https://github.com/Cypher-O/media_muse.git
+    cd media_muse
     ```
 
 2. Install dependencies:
