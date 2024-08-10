@@ -130,7 +130,7 @@ class PlaylistDialog(QDialog):
     def clear_playlist(self):
         self.playlist.clear()
         self.playlist_widget.clear()
-        elf.update_playlist(self.playlist)
+        self.update_playlist(self.playlist)
         self.playlist_widget.addItem("No queue added to the playlist")
         self.parent.controller.playlist = self.playlist
 
