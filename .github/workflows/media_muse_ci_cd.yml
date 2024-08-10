@@ -8,10 +8,10 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
+    
 permissions:
   contents: read
-
+  
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -19,55 +19,55 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.8, 3.9]
-
     steps:
     - uses: actions/checkout@v3
-
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-
     - name: Install system dependencies (Ubuntu only)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y libdbus-1-dev
-
     - name: Install system dependencies (macOS only)
       if: runner.os == 'macOS'
       run: |
         brew install dbus
+        brew install automake
+        brew install libtool
+        brew install pkg-config
         export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
-
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest pyinstaller
-        pip install -r requirements.txt
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          pip install -r requirements.txt
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          pip install -r <(grep -v "dbus-python" requirements.txt)
+          LDFLAGS="-L/opt/homebrew/opt/dbus/lib" CPPFLAGS="-I/opt/homebrew/opt/dbus/include" pip install dbus-python
+        else
+          pip install -r <(grep -v "dbus-python" requirements.txt)
+        fi
       shell: bash
-
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
     - name: Test with pytest
       run: |
         pytest
-
     - name: Build with PyInstaller
       run: |
         pyinstaller --onefile --windowed --name=media_muse_${{ runner.os }} --add-data "src:src" src/main.py
-
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: media_muse-${{ runner.os }}-py${{ matrix.python-version }}
         path: dist/*
-
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
