@@ -36,3 +36,4 @@ requests==2.32.3
 six==1.16.0
 tomlkit==0.12.5
 urllib3==2.2.2
+patchelf==0.17.2.1; sys_platform == 'linux'
