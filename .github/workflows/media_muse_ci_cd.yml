@@ -37,6 +37,7 @@ jobs:
         brew install automake
         brew install libtool
         brew install pkg-config
+        brew install cmake  # Add this line
         export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
@@ -47,8 +48,8 @@ jobs:
         if [ "$RUNNER_OS" == "Linux" ]; then
           pip install -r requirements.txt
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          grep -v "dbus-python" requirements.txt | grep -v "PyQt5" > requirements_no_dbus_pyqt.txt
-          pip install -r requirements_no_dbus_pyqt.txt
+          grep -v "dbus-python" requirements.txt | grep -v "PyQt5" | grep -v "patchelf" > requirements_macos.txt
+          pip install -r requirements_macos.txt
           pip install PyQt5==5.15.10 PyQt5-sip==12.13.0
           LDFLAGS="-L/opt/homebrew/opt/dbus/lib" CPPFLAGS="-I/opt/homebrew/opt/dbus/include" pip install dbus-python
         else
