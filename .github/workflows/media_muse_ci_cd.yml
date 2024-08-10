@@ -47,10 +47,11 @@ jobs:
         if [ "$RUNNER_OS" == "Linux" ]; then
           pip install -r requirements.txt
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          pip install -r <(grep -v "dbus-python" requirements.txt)
+          grep -v "dbus-python" requirements.txt > requirements_no_dbus.txt
+          pip install -r requirements_no_dbus.txt
           LDFLAGS="-L/opt/homebrew/opt/dbus/lib" CPPFLAGS="-I/opt/homebrew/opt/dbus/include" pip install dbus-python
         else
-          pip install -r <(grep -v "dbus-python" requirements.txt)
+          pip install $(grep -v "dbus-python" requirements.txt)
         fi
       shell: bash
     - name: Lint with flake8
