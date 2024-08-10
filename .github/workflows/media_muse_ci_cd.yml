@@ -83,3 +83,8 @@ jobs:
         body: Automated release for commit ${{ github.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Remove patchelf on non-Linux platforms
+      if: runner.os != 'Linux'
+      run: pip uninstall -y patchelf
+      continue-on-error: true
