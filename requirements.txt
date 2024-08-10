@@ -37,3 +37,5 @@ six==1.16.0
 tomlkit==0.12.5
 urllib3==2.2.2
 patchelf==0.17.2.1; sys_platform == 'linux'
+python-xlib==0.33; sys_platform == 'linux'
+python3-xlib==0.15; sys_platform == 'linux'
