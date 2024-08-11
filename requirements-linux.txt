@@ -1,0 +1,4 @@
+patchelf==0.17.2.1
+python-xlib==0.33
+python3-xlib==0.15
+dbus-python==1.3.2
