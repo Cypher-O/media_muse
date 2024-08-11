@@ -49,13 +49,20 @@ jobs:
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
 
+    # - name: Install Python dependencies on macOS
+    #   if: runner.os == 'macOS'
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install -r requirements.txt
+    #     # Install dbus-python if needed
+    #     pip install dbus-python
     - name: Install Python dependencies on macOS
       if: runner.os == 'macOS'
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        # Install dbus-python if needed
-        pip install dbus-python
+        # Skip patchelf installation on macOS
+        # pip install patchelf
 
     - name: Install system dependencies (Windows)
       if: runner.os == 'Windows'
