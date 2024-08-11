@@ -63,15 +63,88 @@ jobs:
     - name: Create macOS Installer
       if: runner.os == 'macOS'
       run: |
+        # Create .app structure
+        mkdir -p "dist/Media Muse.app/Contents/MacOS"
+        mkdir -p "dist/Media Muse.app/Contents/Resources"
+        cp dist/media_muse_macOS "dist/Media Muse.app/Contents/MacOS/Media Muse"
+        # Create Info.plist
+        cat > "dist/Media Muse.app/Contents/Info.plist" << EOL
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>Media Muse</string>
+            <key>CFBundleIconFile</key>
+            <string>media_muse.icns</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.yourdomain.mediamuse</string>
+            <key>CFBundleName</key>
+            <string>Media Muse</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0</string>
+        </dict>
+        </plist>
+        EOL
+        # Add your icon file (media_muse.icns) to the Resources folder
+        cp media_muse.icns "dist/Media Muse.app/Contents/Resources/"
+        # Create DMG
         brew install create-dmg
-        create-dmg --volname "Media Muse Installer" --window-pos 200 120 --window-size 800 400 --icon-size 100 --icon "media_muse_macOS" 200 190 --hide-extension "media_muse_macOS" --app-drop-link 600 185 "dist/media_muse_macOS_installer.dmg" "dist/media_muse_macOS"
+        create-dmg \
+          --volname "Media Muse Installer" \
+          --window-pos 200 120 \
+          --window-size 800 400 \
+          --icon-size 100 \
+          --icon "Media Muse.app" 200 190 \
+          --hide-extension "Media Muse.app" \
+          --app-drop-link 600 185 \
+          "dist/media_muse_macOS_installer.dmg" \
+          "dist/Media Muse.app"
     - name: Create Linux Installer
       if: runner.os == 'Linux'
       run: |
         mkdir -p dist/media_muse_linux/DEBIAN
-        mkdir -p dist/media_muse_linux/usr/local/bin
-        cp -r dist/media_muse_Linux/* dist/media_muse_linux/usr/local/bin/
-        cp DEBIAN/control dist/media_muse_linux/DEBIAN/control
+        mkdir -p dist/media_muse_linux/usr/bin
+        mkdir -p dist/media_muse_linux/usr/share/applications
+        mkdir -p dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps
+        cp -r dist/media_muse_Linux/* dist/media_muse_linux/usr/bin/
+        mv dist/media_muse_linux/usr/bin/media_muse_Linux dist/media_muse_linux/usr/bin/media-muse
+        chmod +x dist/media_muse_linux/usr/bin/media-muse
+        # Create .desktop file
+        cat > dist/media_muse_linux/usr/share/applications/media-muse.desktop << EOL
+        [Desktop Entry]
+        Version=1.0
+        Type=Application
+        Name=Media Muse
+        Exec=/usr/bin/media-muse
+        Icon=media-muse
+        Categories=AudioVideo;
+        EOL
+        # Add your icon file (media-muse.svg) to the icons folder
+        cp media-muse.svg dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps/
+        # Update control file
+        cat > dist/media_muse_linux/DEBIAN/control << EOL
+        Package: media-muse
+        Version: 1.0
+        Section: base
+        Priority: optional
+        Architecture: amd64
+        Depends: python3 (>= 3.9)
+        Maintainer: Your Name <your.email@example.com>
+        Description: Media Muse Application
+         A brief description of your Media Muse application.
+         This can be multiple lines long.
+        EOL
+        # Create postinst script
+        cat > dist/media_muse_linux/DEBIAN/postinst << EOL
+        #!/bin/sh
+        set -e
+        update-desktop-database
+        EOL
+        chmod 755 dist/media_muse_linux/DEBIAN/postinst
+        # Build the package
         sudo apt-get install -y fakeroot
         fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb
     - name: Upload artifact
