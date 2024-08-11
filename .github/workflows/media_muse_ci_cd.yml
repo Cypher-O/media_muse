@@ -79,7 +79,7 @@ jobs:
             <key>CFBundleExecutable</key>
             <string>media_muse_macOS</string>
             <key>CFBundleIconFile</key>
-            <string>media_muse.icns</string>
+            <string>media-muse.icns</string>
             <key>CFBundleIdentifier</key>
             <string>com.yourdomain.mediamuse</string>
             <key>CFBundleName</key>
@@ -92,8 +92,20 @@ jobs:
         </plist>
         EOL
         
-        # Add your icon file (media_muse.icns) to the Resources folder
-        cp media_muse.icns "dist/Media Muse.app/Contents/Resources/"
+        # Check if media-muse.icns exists, if not create a placeholder
+        if [ ! -f "media-muse.icns" ]; then
+          echo "media-muse.icns not found. Creating a placeholder icon."
+          # Install ImageMagick if not already available
+          brew install imagemagick
+          # Create a simple placeholder icon using command-line tools
+          convert -size 512x512 xc:none -fill white -draw "circle 256,256 256,0" \
+                  -fill black -draw "circle 256,256 224,256" \
+                  -fill white -draw "circle 256,256 192,256" \
+                  "media-muse.icns"
+        fi
+        
+        # Add icon file to the Resources folder
+        cp media-muse.icns "dist/Media Muse.app/Contents/Resources/"
         
         # Create DMG
         brew install create-dmg
