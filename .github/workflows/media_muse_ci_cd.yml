@@ -54,7 +54,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install PyQt5  # Install the latest compatible version
+        # PyQt5 is sufficient; PyQt5-Qt5 is not separately needed
+        pip install PyQt5==5.15.10
+        # Install dbus-python if needed
         pip install dbus-python
 
     - name: Install system dependencies (Windows)
