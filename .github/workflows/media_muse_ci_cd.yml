@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.8, 3.9]
+        python-version: [3.9]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -30,12 +30,13 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libdbus-1-dev
-    - name: Install Python dependencies on Linux
-      if: runner.os == 'Linux'
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install -r requirements-linux.txt
+        if [ "${{ runner.os }}" == "Linux" ]; then
+          pip install -r requirements-linux.txt
+        fi
     - name: Install system dependencies (macOS)
       if: runner.os == 'macOS'
       run: |
@@ -43,45 +44,45 @@ jobs:
         export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
-    - name: Install Python dependencies on macOS
-      if: runner.os == 'macOS'
+    - name: Install flake8 and PyInstaller
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        # Skip patchelf installation on macOS
-        # pip install patchelf
-    - name: Install Python dependencies on Windows
-      if: runner.os == 'Windows'
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Install flake8
-      run: |
-        python -m pip install flake8
+        python -m pip install flake8 pyinstaller
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Install PyInstaller
-      run: |
-        python -m pip install pyinstaller
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --name=media_muse_${{ runner.os }} --add-data "src:src" src/main.py
+        pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" src/main.py
+    - name: Create Windows Installer
+      if: runner.os == 'Windows'
+      run: |
+        choco install innosetup
+        iscc /O"dist" /F"media_muse_windows_installer" "inno_setup_script.iss"
+    - name: Create macOS Installer
+      if: runner.os == 'macOS'
+      run: |
+        brew install create-dmg
+        create-dmg --volname "Media Muse Installer" --window-pos 200 120 --window-size 800 400 --icon-size 100 --icon "media_muse_macOS" 200 190 --hide-extension "media_muse_macOS" --app-drop-link 600 185 "dist/media_muse_macOS_installer.dmg" "dist/media_muse_macOS"
+    - name: Create Linux Installer
+      if: runner.os == 'Linux'
+      run: |
+        mkdir -p dist/media_muse_linux/DEBIAN
+        mkdir -p dist/media_muse_linux/usr/local/bin
+        cp dist/media_muse_Linux dist/media_muse_linux/usr/local/bin/media_muse
+        cp DEBIAN/control dist/media_muse_linux/DEBIAN/control
+        sudo apt-get install -y fakeroot
+        fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: media_muse-${{ runner.os }}-py${{ matrix.python-version }}
-        path: dist/*
-    - name: Enable Actions Runner Diagnostic Logging
-      run: |
-        echo "ACTIONS_RUNNER_DEBUG=true" >> $GITHUB_ENV
-        echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
+        name: media_muse-${{ runner.os }}-installer
+        path: dist/*_installer*
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
       with:
-        files: dist/*
+        files: dist/*_installer*
         tag_name: v${{ github.run_number }}
         name: Release ${{ github.run_number }}
         body: Automated release for commit ${{ github.sha }}
