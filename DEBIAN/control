@@ -5,6 +5,4 @@ Priority: optional
 Architecture: amd64
 Depends: python3 (>= 3.9)
 Maintainer: Olumide Awodeji awodejiolumidekolade@gmail.com
-Description: Media Muse Application
- A brief description of your Media Muse application.
- This can be multiple lines long.
+Description: Media Muse Application. || An application that allows users to playback media files with a comprehensive set of controls and features.
