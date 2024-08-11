@@ -25,11 +25,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        
     - name: Install system dependencies (Ubuntu only)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y libdbus-1-dev
+        
     - name: Install system dependencies (macOS only)
       if: runner.os == 'macOS'
       run: |
@@ -41,15 +43,16 @@ jobs:
         export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest pyinstaller
         if [ "$RUNNER_OS" == "Linux" ]; then
-          pip install patchelf
           pip install -r requirements.txt
+          pip install patchelf
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          grep -v "dbus-python" requirements.txt | grep -v "PyQt5" | grep -v "patchelf" > requirements_macos.txt
+          grep -v "patchelf" requirements.txt > requirements_macos.txt
           pip install -r requirements_macos.txt
           pip install PyQt5==5.15.10 PyQt5-sip==12.13.0
           LDFLAGS="-L/opt/homebrew/opt/dbus/lib" CPPFLAGS="-I/opt/homebrew/opt/dbus/include" pip install dbus-python
@@ -58,18 +61,22 @@ jobs:
           pip install PyQt5==5.15.10 PyQt5-sip==12.13.0
         fi
       shell: bash
+
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Build with PyInstaller
       run: |
         pyinstaller --onefile --windowed --name=media_muse_${{ runner.os }} --add-data "src:src" src/main.py
+
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: media_muse-${{ runner.os }}-py${{ matrix.python-version }}
         path: dist/*
+
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
