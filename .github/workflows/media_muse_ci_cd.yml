@@ -66,7 +66,10 @@ jobs:
         # Create .app structure
         mkdir -p "dist/Media Muse.app/Contents/MacOS"
         mkdir -p "dist/Media Muse.app/Contents/Resources"
-        cp dist/media_muse_macOS "dist/Media Muse.app/Contents/MacOS/Media Muse"
+        
+        # Copy the entire contents of the PyInstaller output
+        cp -R dist/media_muse_macOS/* "dist/Media Muse.app/Contents/MacOS/"
+        
         # Create Info.plist
         cat > "dist/Media Muse.app/Contents/Info.plist" << EOL
         <?xml version="1.0" encoding="UTF-8"?>
@@ -74,7 +77,7 @@ jobs:
         <plist version="1.0">
         <dict>
             <key>CFBundleExecutable</key>
-            <string>Media Muse</string>
+            <string>media_muse_macOS</string>
             <key>CFBundleIconFile</key>
             <string>media_muse.icns</string>
             <key>CFBundleIdentifier</key>
@@ -88,8 +91,10 @@ jobs:
         </dict>
         </plist>
         EOL
+        
         # Add your icon file (media_muse.icns) to the Resources folder
         cp media_muse.icns "dist/Media Muse.app/Contents/Resources/"
+        
         # Create DMG
         brew install create-dmg
         create-dmg \
