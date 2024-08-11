@@ -70,4 +70,3 @@ jobs:
         body: Automated release for commit ${{ github.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
