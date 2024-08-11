@@ -1,8 +1,6 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-# This workflow will install Python dependencies, lint, and build with a single version of Python
-
 name: Media Muse CI/CD
 
 on:
@@ -39,24 +37,23 @@ jobs:
         brew install automake
         brew install libtool
         brew install pkg-config
-        brew install cmake  # Add this line
+        brew install cmake
         export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install flake8 pytest pyinstaller
         if [ "$RUNNER_OS" == "Linux" ]; then
-          pip install flake8 pytest pyinstaller patchelf
+          pip install patchelf
           pip install -r requirements.txt
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          pip install flake8 pytest pyinstaller
           grep -v "dbus-python" requirements.txt | grep -v "PyQt5" | grep -v "patchelf" > requirements_macos.txt
           pip install -r requirements_macos.txt
           pip install PyQt5==5.15.10 PyQt5-sip==12.13.0
           LDFLAGS="-L/opt/homebrew/opt/dbus/lib" CPPFLAGS="-I/opt/homebrew/opt/dbus/include" pip install dbus-python
         else
-          pip install flake8 pytest pyinstaller
           pip install -r requirements.txt
           pip install PyQt5==5.15.10 PyQt5-sip==12.13.0
         fi
@@ -83,4 +80,3 @@ jobs:
         body: Automated release for commit ${{ github.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
