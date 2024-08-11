@@ -23,7 +23,6 @@ PyMsgBox==1.0.9
 pyperclip==1.9.0
 pyproject_hooks==1.1.0
 PyQt5==5.15.10
-PyQt5-Qt5==5.15.2
 PyQt5-sip==12.13.0
 PyRect==0.2.0
 PyScreeze==0.1.30
