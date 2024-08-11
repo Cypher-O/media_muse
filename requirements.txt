@@ -29,13 +29,13 @@ PyQt5-sip==12.13.0
 PyRect==0.2.0
 PyScreeze==0.1.30
 pystray==0.19.5
-python-xlib==0.33
-python3-xlib==0.15
 pytweening==1.2.0
 requests==2.32.3
 six==1.16.0
 tomlkit==0.12.5
 urllib3==2.2.2
+
+# Conditional dependencies for Linux only
 patchelf==0.17.2.1; sys_platform == 'linux'
 python-xlib==0.33; sys_platform == 'linux'
 python3-xlib==0.15; sys_platform == 'linux'
