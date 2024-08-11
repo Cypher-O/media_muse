@@ -35,10 +35,6 @@ class VideoPlayer(QMainWindow):
         self.video_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.video_frame.setStyleSheet("background-color: black;")
         self.layout.addWidget(self.video_frame)
-
-        # # Controls layout
-        # self.controls_layout = QHBoxLayout()
-        # self.layout.addLayout(self.controls_layout)
         
         # Create a widget to hold all controls
         self.controls_widget = QWidget(self)
@@ -140,12 +136,8 @@ class VideoPlayer(QMainWindow):
         self.repeat = False
         self.shuffle = False
         
-        # # Flags for fullscreen and mouse tracking
+        # Flags for fullscreen and mouse tracking
         self.fullscreen = False
-        # self.mouse_timer = QTimer(self)
-        # self.mouse_timer.setSingleShot(True)
-        # self.mouse_timer.timeout.connect(self.hide_controls)
-        # self.last_mouse_position = QPoint()
         # Timer for hiding controls on mouse inactivity
         self.mouse_timer = QTimer(self)
         self.mouse_timer.setSingleShot(True)
@@ -161,7 +153,6 @@ class VideoPlayer(QMainWindow):
         # Connect mouseMoveEvent to track mouse movement
         self.setMouseTracking(True)
         
-
         # Connect to end of media event
         self.event_manager = self.controller.media_player.event_manager()
         self.event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, self.controller.handle_end_of_media)
@@ -180,9 +171,6 @@ class VideoPlayer(QMainWindow):
         open_multiple_action.triggered.connect(self.controller.open_multiple_files)
         file_menu.addAction(open_multiple_action)
         
-        # recent_media_action = QAction('Recent Media', self)
-        # recent_media_action.triggered.connect(self.show_recent_media)
-        # file_menu.addAction(recent_media_action)
         self.recent_media_menu = file_menu.addMenu(RECENT_MEDIA_ACTION)
 
         exit_action = QAction(MEDIA_EXIT_ACTION, self)

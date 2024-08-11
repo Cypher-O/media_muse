@@ -4,7 +4,6 @@ from utils.config import *
 class AboutDialog(QDialog):
     def __init__(self):
         super().__init__()
-        self.center()
         self.setWindowTitle(ABOUT)
         self.setGeometry(100, 100, 400, 300)
         layout = QVBoxLayout()

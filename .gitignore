@@ -15,3 +15,6 @@ __pycache__/
 
 # IDEs and editors
 .vscode/
+
+# log
+vlc-log.txt

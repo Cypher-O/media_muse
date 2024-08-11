@@ -1,19 +1,3 @@
-# from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel
-
-# class CodecInfoDialog(QDialog):
-#     def __init__(self, codec_info, parent=None):
-#         super().__init__(parent)
-#         self.setWindowTitle("Codec Information")
-#         self.setGeometry(100, 100, 400, 300)
-#         layout = QVBoxLayout()
-
-#         for info in codec_info:
-#             label = QLabel(info)
-#             layout.addWidget(label)
-        
-#         self.setLayout(layout)
-
-
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QScrollArea, QWidget
 from PyQt5.QtCore import Qt
 

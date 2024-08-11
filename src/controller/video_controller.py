@@ -1,16 +1,9 @@
-import os
-import sys
-import vlc
-import ctypes
-import logging
+import os, sys, vlc, ctypes, logging, random, configparser
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QDialog, QComboBox, QLabel, QSlider, QProgressBar, QPushButton, QVBoxLayout, QHBoxLayout, QAction, QMenuBar
 from PyQt5.QtCore import QTimer, QDir, Qt
-import random
-import configparser
 from view.codec_info_dialog import CodecInfoDialog
 from view.preferences_dialog import PreferencesDialog
 from utils.config import *
-
 
 class VideoController:
     def __init__(self, view):
@@ -272,44 +265,6 @@ class VideoController:
 
         print(f"Total subtitle options (including 'No subtitles'): {len(self.subtitle_tracks)}")
         self.view.subtitle_combo.setEnabled(len(self.subtitle_tracks) > 1)
-        
-    
-    # def get_codec_info(self):
-    #     if self.media_player.is_playing() or self.media_player.get_state() == vlc.State.Paused:
-    #         media = self.media_player.get_media()
-    #         media.parse()
-            
-    #         codec_info = []
-    #         tracks = media.tracks_get()
-    #         print("Available methods and attributes of media object:")
-    #         print(dir(media))
-    #         for i, track in enumerate(tracks):
-    #             codec_info.append(f"Track {i}:")
-    #             codec_info.append(f"  Type: {track.type}")
-                
-    #             # Safely get codec information
-    #             codec = getattr(track, 'codec', None)
-    #             if codec:
-    #                 codec_info.append(f"  Codec: {codec}")
-                
-    #             # Safely get codec description
-    #             codec_description = getattr(track, 'codec_description', None)
-    #             if codec_description:
-    #                 codec_info.append(f"  Codec Description: {codec_description}")
-                
-    #             # Add any other attributes that might be useful and available
-    #             for attr in ['bitrate', 'width', 'height', 'fps', 'channels']:
-    #                 value = getattr(track, attr, None)
-    #                 if value is not None:
-    #                     codec_info.append(f"  {attr.capitalize()}: {value}")
-                
-    #             codec_info.append("")
-
-    #         # Removed: media.tracks_release()
-    #         return codec_info
-    #     else:
-    #         return ["No media playing"]
-    
     
     def get_codec_info(self):
         if self.media_player.is_playing() or self.media_player.get_state() == vlc.State.Paused:
@@ -380,50 +335,6 @@ class VideoController:
             return codec_info
         else:
             return ["No media playing"]
-
-    
-    
-    # def get_codec_info(self):
-    #     if self.media_player.is_playing() or self.media_player.get_state() == vlc.State.Paused:
-    #         media = self.media_player.get_media()
-    #         media.parse()
-            
-    #         codec_info = []
-
-    #         # Add general media information
-    #         codec_info.append("General Media Information:")
-    #         codec_info.append(f"  Duration: {media.get_duration()} ms")
-    #         codec_info.append(f"  State: {media.get_state()}")
-            
-    #         try:
-    #             stats = media.get_stats()
-    #             codec_info.append("  Statistics:")
-    #             for key, value in stats.__dict__.items():
-    #                 if value is not None and not key.startswith('_'):
-    #                     codec_info.append(f"    {key.capitalize()}: {value}\n")
-    #         except Exception as e:
-    #             codec_info.append(f"  Error retrieving media statistics: {str(e)}")
-
-    #         try:
-    #             tracks = media.tracks_get()
-    #             for i, track in enumerate(tracks):
-    #                 codec_info.append(f"Track {i}:")
-    #                 codec_info.append(f"  Type: {track.type}")
-                    
-    #                 # Get all available attributes
-    #                 track_info = track.__dict__
-    #                 for key, value in track_info.items():
-    #                     if value is not None and key not in ['_as_parameter_', 'contents']:
-    #                         codec_info.append(f"  {key.capitalize()}: {value}")
-                    
-    #                 codec_info.append("")
-
-    #         except Exception as e:
-    #             codec_info.append(f"Error retrieving track information: {str(e)}")
-
-    #         return codec_info
-    #     else:
-    #         return ["No media playing"]
 
     def show_codec_info(self):
         codec_info = self.get_codec_info()
