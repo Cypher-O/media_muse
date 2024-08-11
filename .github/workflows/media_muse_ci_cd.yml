@@ -70,7 +70,7 @@ jobs:
       run: |
         mkdir -p dist/media_muse_linux/DEBIAN
         mkdir -p dist/media_muse_linux/usr/local/bin
-        cp dist/media_muse_Linux dist/media_muse_linux/usr/local/bin/media_muse
+        cp -r dist/media_muse_Linux/* dist/media_muse_linux/usr/local/bin/
         cp DEBIAN/control dist/media_muse_linux/DEBIAN/control
         sudo apt-get install -y fakeroot
         fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb

@@ -1,0 +1,10 @@
+Package: media-muse
+Version: 1.0
+Section: base
+Priority: optional
+Architecture: amd64
+Depends: python3 (>= 3.9)
+Maintainer: Your Name <your.email@example.com>
+Description: Media Muse Application
+ A brief description of your Media Muse application.
+ This can be multiple lines long.
