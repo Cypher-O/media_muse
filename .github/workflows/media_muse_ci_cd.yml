@@ -34,20 +34,16 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libdbus-1-dev
 
+    - name: Install system dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install dbus automake libtool pkg-config cmake autoconf
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pyinstaller  # Install flake8 and pyinstaller
         pip install -r requirements.txt
-
-    - name: Install system dependencies (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        brew install dbus automake libtool pkg-config cmake
-        export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
-        export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
-        export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
-        LDFLAGS="-L/opt/homebrew/opt/dbus/lib" CPPFLAGS="-I/opt/homebrew/opt/dbus/include" pip install dbus-python
 
     - name: Lint with flake8
       run: |
