@@ -58,7 +58,13 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Build with PyInstaller
       run: |
-        pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "${{ runner.os == 'Windows' && 'C:\Program Files\VideoLAN\VLC\libvlc.dll;.' || runner.os == 'macOS' && '/usr/local/lib/libvlc.dylib:.' || '/usr/lib/x86_64-linux-gnu/libvlc.so:.' }}" src/main.py
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll:." src/main.py
+        elif [ "${{ runner.os }}" = "macOS" ]; then
+          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "/opt/homebrew/lib/libvlc.dylib:." src/main.py
+        else
+          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "/usr/lib/x86_64-linux-gnu/libvlc.so:." src/main.py
+        fi
     - name: Create Windows Installer
       if: runner.os == 'Windows'
       run: |
