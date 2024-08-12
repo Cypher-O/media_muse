@@ -8,8 +8,26 @@ from utils.config import *
 class VideoController:
     def __init__(self, view):
         self.view = view
-        self.instance = vlc.Instance(['--no-xlib', '--avcodec-hw=none', '--verbose=2', '--file-logging', '--logfile=vlc-log.txt'])
-        self.media_player = self.instance.media_player_new()
+        # self.instance = vlc.Instance(['--no-xlib', '--avcodec-hw=none', '--verbose=2', '--file-logging', '--logfile=vlc-log.txt'])
+        # self.media_player = self.instance.media_player_new()
+        try:
+            self.instance = vlc.Instance(['--verbose=2', '--file-logging', '--logfile=vlc-log.txt'])
+        except Exception as e:
+            QMessageBox.critical(self.view, "VLC Error", f"Error creating VLC instance: {str(e)}\n\nPlease check your VLC installation.")
+            sys.exit(1)  # Exit the application if VLC can't be initialized
+        
+        if self.instance:
+            try:
+                self.media_player = self.instance.media_player_new()
+                self.event_manager = self.media_player.event_manager()
+                self.event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, self.handle_end_of_media)
+            except Exception as e:
+                QMessageBox.critical(self.view, "VLC Error", f"Error initializing media player: {str(e)}\n\nPlease check your VLC installation.")
+                sys.exit(1)  # Exit the application if media player can't be initialized
+        else:
+            QMessageBox.critical(self.view, "VLC Error", "Failed to create VLC instance. Please check your VLC installation.")
+            sys.exit(1)  # Exit the application if VLC instance is None
+            
         self.playlist = []
         self.playlist_index = 0
         self.repeat = False
