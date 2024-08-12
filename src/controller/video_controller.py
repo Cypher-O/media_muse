@@ -11,10 +11,16 @@ class VideoController:
         # self.instance = vlc.Instance(['--no-xlib', '--avcodec-hw=none', '--verbose=2', '--file-logging', '--logfile=vlc-log.txt'])
         # self.media_player = self.instance.media_player_new()
         try:
-            self.instance = vlc.Instance(['--verbose=2', '--file-logging', '--logfile=vlc-log.txt'])
+            # Remove the --file-logging option
+            self.instance = vlc.Instance(['--verbose=2'])
+            
+            # Set up logging manually
+            logging.basicConfig(filename='media-muse-log.txt', level=logging.DEBUG)
+            
         except Exception as e:
-            QMessageBox.critical(self.view, "VLC Error", f"Error creating VLC instance: {str(e)}\n\nPlease check your VLC installation.")
-            sys.exit(1)  # Exit the application if VLC can't be initialized
+            QMessageBox.critical(self.view, "Media Muse Error", f"Error launching media muse: {str(e)}\n\nPlease contact your vendor.")
+            logging.error(f"Error creating VLC instance: {str(e)}")
+            sys.exit(1)
         
         if self.instance:
             try:
@@ -22,11 +28,13 @@ class VideoController:
                 self.event_manager = self.media_player.event_manager()
                 self.event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, self.handle_end_of_media)
             except Exception as e:
-                QMessageBox.critical(self.view, "VLC Error", f"Error initializing media player: {str(e)}\n\nPlease check your VLC installation.")
-                sys.exit(1)  # Exit the application if media player can't be initialized
+                QMessageBox.critical(self.view, "Media Muse Error", f"Error launching media muse: {str(e)}\n\nPlease contact your vendor.")
+                logging.error(f"Error initializing media player: {str(e)}")
+                sys.exit(1)
         else:
-            QMessageBox.critical(self.view, "VLC Error", "Failed to create VLC instance. Please check your VLC installation.")
-            sys.exit(1)  # Exit the application if VLC instance is None
+            QMessageBox.critical(self.view, "Medeia Muse Error", "Failed to launch Media Muse. Please contacct your vendor.")
+            logging.error("Failed to create VLC instance")
+            sys.exit(1)
             
         self.playlist = []
         self.playlist_index = 0
