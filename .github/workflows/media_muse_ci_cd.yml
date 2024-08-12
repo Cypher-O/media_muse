@@ -1,4 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow will install Python dependencies, run tests, and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
 name: Media Muse CI/CD
@@ -25,11 +25,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        
     - name: Install system dependencies (Linux)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y libdbus-1-dev vlc libvlc-dev
+        
     - name: Install system dependencies (macOS)
       if: runner.os == 'macOS'
       run: |
@@ -37,39 +39,50 @@ jobs:
         export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
         export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
         export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
+        # Ensure libvlc.dylib is found
+        ls -la /opt/homebrew/lib/libvlc.dylib || echo "libvlc.dylib not found!"
+        
     - name: Install system dependencies (Windows)
       if: runner.os == 'Windows'
       run: |
         choco install vlc
+        
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        
     - name: Install Linux-specific dependencies
       if: runner.os == 'Linux'
       run: |
         pip install -r requirements-linux.txt
+        
     - name: Install flake8 and PyInstaller
       run: |
         python -m pip install flake8 pyinstaller
+        
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
     - name: Build with PyInstaller
       run: |
         if [ "${{ runner.os }}" = "Windows" ]; then
           pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll:." src/main.py
         elif [ "${{ runner.os }}" = "macOS" ]; then
-          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "/opt/homebrew/lib/libvlc.dylib:." src/main.py
+          # Use appropriate path for libvlc.dylib
+          pyinstaller --name=media_muse_${{ runner.os }}" --add-data "src:src" --add-binary "/opt/homebrew/lib/libvlc.dylib:." src/main.py
         else
           pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "/usr/lib/x86_64-linux-gnu/libvlc.so:." src/main.py
         fi
+        
     - name: Create Windows Installer
       if: runner.os == 'Windows'
       run: |
         choco install innosetup
         iscc /O"dist" /F"media_muse_windows_installer" "inno_setup_script.iss"
+        
     - name: Create macOS Installer
       if: runner.os == 'macOS'
       run: |
@@ -91,7 +104,7 @@ jobs:
             <key>CFBundleIconFile</key>
             <string>media-muse.icns</string>
             <key>CFBundleIdentifier</key>
-            <string>com.yourdomain.mediamuse</string>
+            <string>com.synth.mediamuse</string>
             <key>CFBundleName</key>
             <string>Media Muse</string>
             <key>CFBundlePackageType</key>
@@ -129,6 +142,7 @@ jobs:
           --app-drop-link 600 185 \
           "dist/media_muse_macOS_installer.dmg" \
           "dist/Media Muse.app"
+          
     - name: Create Linux Installer
       if: runner.os == 'Linux'
       run: |
@@ -159,7 +173,7 @@ jobs:
         Priority: optional
         Architecture: amd64
         Depends: python3 (>= 3.9)
-        Maintainer: Your Name <your.email@example.com>
+        Maintainer: Olumide Awodeji awodejiolumidekolade@gmail.com
         Description: Media Muse Application
          A brief description of your Media Muse application.
          This can be multiple lines long.
@@ -174,18 +188,17 @@ jobs:
         # Build the package
         sudo apt-get install -y fakeroot
         fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb
+        
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: media_muse-${{ runner.os }}-installer
         path: dist/*_installer*
+        
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
       with:
         files: dist/*_installer*
-        tag_name: v${{ github.run_number }}
-        name: Release ${{ github.run_number }}
-        body: Automated release for commit ${{ github.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
