@@ -72,73 +72,68 @@ jobs:
         
     - name: Build with PyInstaller
       run: |
-        if [ "$RUNNER_OS" = "Windows" ]; then
-            pyinstaller --name=media_muse_Windows --add-data "src:src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll:." src/main.py
-        elif [ "$RUNNER_OS" = "macOS" ]; then
-            # macOS-specific code (unchanged)
-            VLC_PATHS=(
-                "/opt/homebrew/lib/libvlc.dylib"
-                "/usr/local/lib/libvlc.dylib"
-                "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib"
-            )
-            
-            VLC_PATH=""
-            for path in "${VLC_PATHS[@]}"; do
-                if [ -f "$path" ]; then
-                    VLC_PATH="$path"
-                    break
-                fi
-            done
-            
-            if [ -z "$VLC_PATH" ]; then
-                echo "Error: libvlc.dylib not found. Please install VLC or specify the correct path."
-                exit 1
-            fi
-            
-            echo "Using libvlc.dylib from: $VLC_PATH"
-            pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
-        else
-            # Linux-specific code
-            echo "Running on Linux"
-            
-            # Ensure VLC is installed
-            if ! dpkg -s vlc &>/dev/null; then
-                echo "VLC not found. Installing..."
-                sudo apt-get update
-                sudo apt-get install -y vlc libvlc-dev
-            else
-                echo "VLC is already installed."
-            fi
-            
-            # Check for libvlc.so in multiple possible locations
-            VLC_PATHS=(
-                "/usr/lib/x86_64-linux-gnu/libvlc.so"
-                "/usr/lib/libvlc.so"
-                "/usr/local/lib/libvlc.so"
-            )
-            
-            VLC_PATH=""
-            for path in "${VLC_PATHS[@]}"; do
-                if [ -f "$path" ]; then
-                    VLC_PATH="$path"
-                    break
-                fi
-            done
-            
-            if [ -z "$VLC_PATH" ]; then
-                echo "Error: libvlc.so not found. Please check VLC installation."
-                # Print debug information
-                echo "Debugging information:"
-                ls -l /usr/lib/x86_64-linux-gnu/libvlc.so* || echo "No files found in /usr/lib/x86_64-linux-gnu/"
-                ls -l /usr/lib/libvlc.so* || echo "No files found in /usr/lib/"
-                ls -l /usr/local/lib/libvlc.so* || echo "No files found in /usr/local/lib/"
-                dpkg -l | grep vlc
-                exit 1
-            fi
-            
-            echo "Using libvlc.so from: $VLC_PATH"
-            pyinstaller --name=media_muse_Linux --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
-        fi
+        if ($env:RUNNER_OS -eq "Windows") {
+          pyinstaller --name=media_muse_Windows --add-data "src;src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll;." src/main.py
+        } elseif ($env:RUNNER_OS -eq "macOS") {
+          VLC_PATHS=@(
+            "/opt/homebrew/lib/libvlc.dylib",
+            "/usr/local/lib/libvlc.dylib",
+            "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib"
+          )
+          
+          $VLC_PATH = ""
+          foreach ($path in $VLC_PATHS) {
+            if (Test-Path $path) {
+              $VLC_PATH = $path
+              break
+            }
+          }
+          
+          if ($VLC_PATH -eq "") {
+            Write-Error "Error: libvlc.dylib not found. Please install VLC or specify the correct path."
+            exit 1
+          }
+          
+          Write-Output "Using libvlc.dylib from: $VLC_PATH"
+          pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
+        } else {
+          Write-Output "Running on Linux"
+          
+          if (-not (dpkg -s vlc 2>/dev/null)) {
+            Write-Output "VLC not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y vlc libvlc-dev
+          } else {
+            Write-Output "VLC is already installed."
+          }
+          
+          $VLC_PATHS = @(
+            "/usr/lib/x86_64-linux-gnu/libvlc.so",
+            "/usr/lib/libvlc.so",
+            "/usr/local/lib/libvlc.so"
+          )
+          
+          $VLC_PATH = ""
+          foreach ($path in $VLC_PATHS) {
+            if (Test-Path $path) {
+              $VLC_PATH = $path
+              break
+            }
+          }
+          
+          if ($VLC_PATH -eq "") {
+            Write-Error "Error: libvlc.so not found. Please check VLC installation."
+            Write-Output "Debugging information:"
+            ls -l /usr/lib/x86_64-linux-gnu/libvlc.so* || Write-Output "No files found in /usr/lib/x86_64-linux-gnu/"
+            ls -l /usr/lib/libvlc.so* || Write-Output "No files found in /usr/lib/"
+            ls -l /usr/local/lib/libvlc.so* || Write-Output "No files found in /usr/local/lib/"
+            dpkg -l | grep vlc
+            exit 1
+          }
+          
+          Write-Output "Using libvlc.so from: $VLC_PATH"
+          pyinstaller --name=media_muse_Linux --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
+        }
         
     - name: Create Windows Installer
       if: runner.os == 'Windows'
