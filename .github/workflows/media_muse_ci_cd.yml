@@ -224,5 +224,10 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: dist/*_installer*
+        name: Release ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
