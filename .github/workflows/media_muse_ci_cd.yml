@@ -65,16 +65,40 @@ jobs:
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Install VLC (macOS)
+      if: runner.os == 'macOS'
+      run: brew install vlc
         
     - name: Build with PyInstaller
       run: |
-        if [ "${{ runner.os }}" = "Windows" ]; then
-          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll:." src/main.py
-        elif [ "${{ runner.os }}" = "macOS" ]; then
-          # Use appropriate path for libvlc.dylib
-          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "/opt/homebrew/lib/libvlc.dylib:." src/main.py
+        if [ "macOS" = "Windows" ]; then
+            pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll:." src/main.py
+        elif [ "macOS" = "macOS" ]; then
+            # Check for libvlc.dylib in multiple possible locations
+            VLC_PATHS=(
+                "/opt/homebrew/lib/libvlc.dylib"
+                "/usr/local/lib/libvlc.dylib"
+                "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib"
+            )
+            
+            VLC_PATH=""
+            for path in "${VLC_PATHS[@]}"; do
+                if [ -f "$path" ]; then
+                    VLC_PATH="$path"
+                    break
+                fi
+            done
+            
+            if [ -z "$VLC_PATH" ]; then
+                echo "Error: libvlc.dylib not found. Please install VLC or specify the correct path."
+                exit 1
+            fi
+            
+            echo "Using libvlc.dylib from: $VLC_PATH"
+            pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
         else
-          pyinstaller --name=media_muse_${{ runner.os }} --add-data "src:src" --add-binary "/usr/lib/x86_64-linux-gnu/libvlc.so:." src/main.py
+            pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "/usr/lib/x86_64-linux-gnu/libvlc.so:." src/main.py
         fi
         
     - name: Create Windows Installer
