@@ -131,7 +131,15 @@ jobs:
         fi
         
         echo "Using libvlc.so from: $VLC_PATH"
-        pyinstaller --name=media_muse_Linux --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
+        
+        # Find the system's libstdc++.so.6
+        LIBSTDCPP_PATH=$(ldconfig -p | grep libstdc++.so.6 | awk '{print $4}' | head -n 1)
+        echo "Using system libstdc++.so.6 from: $LIBSTDCPP_PATH"
+        
+        pyinstaller --name=media_muse_Linux --add-data "src:src" \
+                    --add-binary "$VLC_PATH:." \
+                    --add-binary "$LIBSTDCPP_PATH:." \
+                src/main.py
         
     - name: Create Windows Installer
       if: runner.os == 'Windows'
@@ -221,18 +229,29 @@ jobs:
         cp -r dist/media_muse_Linux/* dist/media_muse_linux/usr/bin/
         mv dist/media_muse_linux/usr/bin/media_muse_Linux dist/media_muse_linux/usr/bin/media-muse
         chmod +x dist/media_muse_linux/usr/bin/media-muse
+        
+        # Create wrapper script
+        cat > dist/media_muse_linux/usr/bin/media-muse-wrapper << EOL
+        #!/bin/bash
+        export LD_LIBRARY_PATH="/usr/bin:$LD_LIBRARY_PATH"
+        /usr/bin/media-muse "$@"
+        EOL
+        chmod +x dist/media_muse_linux/usr/bin/media-muse-wrapper
+        
         # Create .desktop file
         cat > dist/media_muse_linux/usr/share/applications/media-muse.desktop << EOL
         [Desktop Entry]
         Version=1.0
         Type=Application
         Name=Media Muse
-        Exec=/usr/bin/media-muse
+        Exec=/usr/bin/media-muse-wrapper
         Icon=media-muse
         Categories=AudioVideo;
         EOL
+        
         # Add your icon file (media-muse.svg) to the icons folder
         cp media-muse.svg dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps/
+        
         # Update control file
         cat > dist/media_muse_linux/DEBIAN/control << EOL
         Package: media-muse
@@ -240,12 +259,13 @@ jobs:
         Section: base
         Priority: optional
         Architecture: amd64
-        Depends: python3 (>= 3.9)
+        Depends: python3 (>= 3.9), libstdc++6
         Maintainer: Olumide Awodeji awodejiolumidekolade@gmail.com
         Description: Media Muse Application
          A brief description of your Media Muse application.
          This can be multiple lines long.
         EOL
+        
         # Create postinst script
         cat > dist/media_muse_linux/DEBIAN/postinst << EOL
         #!/bin/sh
@@ -253,6 +273,7 @@ jobs:
         update-desktop-database
         EOL
         chmod 755 dist/media_muse_linux/DEBIAN/postinst
+        
         # Build the package
         sudo apt-get install -y fakeroot
         fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb
