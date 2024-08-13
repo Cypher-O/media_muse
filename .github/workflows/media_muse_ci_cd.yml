@@ -74,6 +74,8 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         pyinstaller --name=media_muse_Windows --add-data "src;src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll;." src/main.py
+        # Move or copy the icon to the dist folder
+        cp path/to/your/icon.ico dist/media_muse_windows_icon.ico
         
     - name: Build with PyInstaller (macOS)
       if: matrix.os == 'macos-latest'
