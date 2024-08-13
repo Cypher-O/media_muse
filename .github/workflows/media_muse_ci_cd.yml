@@ -5,13 +5,13 @@ name: Media Muse CI/CD
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
-    
+    branches: ["master"]
+
 permissions:
   contents: write
-  
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -20,269 +20,269 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.11]
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        
-    - name: Install system dependencies (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libdbus-1-dev vlc libvlc-dev
-        
-    - name: Install system dependencies (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        brew install dbus automake libtool pkg-config cmake vlc
-        export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
-        export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
-        export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
-        # Ensure libvlc.dylib is found
-        ls -la /opt/homebrew/lib/libvlc.dylib || echo "libvlc.dylib not found!"
-        
-    - name: Install system dependencies (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        choco install vlc
-        
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Install Linux-specific dependencies
-      if: runner.os == 'Linux'
-      run: |
-        pip install -r requirements-linux.txt
-        
-    - name: Install flake8 and PyInstaller
-      run: |
-        python -m pip install flake8 pyinstaller
-        
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: Install VLC (macOS)
-      if: runner.os == 'macOS'
-      run: brew install vlc
-        
-    - name: Build with PyInstaller (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        pyinstaller --name=media_muse_Windows --add-data "src;src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll;." src/main.py
-        # Move or copy the icon to the dist folder
-        cp path/to/your/icon.ico dist/media_muse_windows_icon.ico
-        
-    - name: Build with PyInstaller (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        VLC_PATHS=(
-          "/opt/homebrew/lib/libvlc.dylib"
-          "/usr/local/lib/libvlc.dylib"
-          "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib"
-        )
-        
-        VLC_PATH=""
-        for path in "${VLC_PATHS[@]}"; do
-          if [ -f "$path" ]; then
-            VLC_PATH="$path"
-            break
-          fi
-        done
-        
-        if [ -z "$VLC_PATH" ]; then
-          echo "Error: libvlc.dylib not found. Please install VLC or specify the correct path."
-          exit 1
-        fi
-        
-        echo "Using libvlc.dylib from: $VLC_PATH"
-        pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
-        
-    - name: Build with PyInstaller (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        if ! dpkg -s vlc >/dev/null 2>&1; then
-          echo "VLC not found. Installing..."
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
           sudo apt-get update
-          sudo apt-get install -y vlc libvlc-dev
-        else
-          echo "VLC is already installed."
-        fi
-        
-        VLC_PATH=$(find /usr/lib -name "libvlc.so" | head -n 1)
-        if [ -z "$VLC_PATH" ]; then
-          echo "Error: libvlc.so not found. Please check VLC installation."
-          exit 1
-        fi
-        
-        echo "Using libvlc.so from: $VLC_PATH"
-        
-        # Find the system's libstdc++.so.6
-        LIBSTDCPP_PATH=$(ldconfig -p | grep libstdc++.so.6 | awk '{print $4}' | head -n 1)
-        echo "Using system libstdc++.so.6 from: $LIBSTDCPP_PATH"
-        
-        pyinstaller --name=media_muse_Linux --add-data "src:src" \
-                    --add-binary "$VLC_PATH:." \
-                    --exclude-module _bootlocale \
-                    src/main.py
-        
-    - name: Create Windows Installer
-      if: runner.os == 'Windows'
-      run: |
-        choco install innosetup
-        iscc /O"dist" /F"media_muse_windows_installer" "inno_setup_script.iss"
-        
-    - name: Create macOS Installer
-      if: runner.os == 'macOS'
-      run: |
-        # Create .app structure
-        mkdir -p "dist/Media Muse.app/Contents/MacOS"
-        mkdir -p "dist/Media Muse.app/Contents/Resources"
-        
-        # Copy the entire contents of the PyInstaller output
-        cp -R dist/media_muse_macOS/* "dist/Media Muse.app/Contents/MacOS/"
-        
-        # Create Info.plist
-        cat > "dist/Media Muse.app/Contents/Info.plist" << EOL
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>CFBundleExecutable</key>
-            <string>Media Muse</string>
-            <key>CFBundleIconFile</key>
-            <string>media-muse.icns</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.synth.mediamuse</string>
-            <key>CFBundleName</key>
-            <string>Media Muse</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleShortVersionString</key>
-            <string>1.0</string>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-            <key>NSPrincipalClass</key>
-            <string>NSApplication</string>
-        </dict>
-        </plist>
-        EOL
-        
-        # Check if media-muse.icns exists, if not create a placeholder
-        if [ ! -f "media-muse.icns" ]; then
-          echo "media-muse.icns not found. Creating a placeholder icon."
-          # Install ImageMagick if not already available
-          brew install imagemagick
-          # Create a simple placeholder icon using command-line tools
-          convert -size 512x512 xc:none -fill white -draw "circle 256,256 256,0" \
-                  -fill black -draw "circle 256,256 224,256" \
-                  -fill white -draw "circle 256,256 192,256" \
-                  "media-muse.icns"
-        fi
-        
-        # Add icon file to the Resources folder
-        cp media-muse.icns "dist/Media Muse.app/Contents/Resources/"
-        
-        # Create a shell script to launch the app
-        cat > "dist/Media Muse.app/Contents/MacOS/Media Muse" << EOL
-        #!/bin/bash
-        DIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
-        "\$DIR/media_muse_macOS"
-        EOL
-        chmod +x "dist/Media Muse.app/Contents/MacOS/Media Muse"
-        
-        # Create DMG
-        brew install create-dmg
-        create-dmg \
-          --volname "Media Muse Installer" \
-          --window-pos 200 120 \
-          --window-size 800 400 \
-          --icon-size 100 \
-          --icon "Media Muse.app" 200 190 \
-          --hide-extension "Media Muse.app" \
-          --app-drop-link 600 185 \
-          "dist/media_muse_macOS_installer.dmg" \
-          "dist/Media Muse.app"
-          
-    - name: Create Linux Installer
-      if: runner.os == 'Linux'
-      run: |
-        mkdir -p dist/media_muse_linux/DEBIAN
-        mkdir -p dist/media_muse_linux/usr/bin
-        mkdir -p dist/media_muse_linux/usr/share/applications
-        mkdir -p dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps
-        cp -r dist/media_muse_Linux/* dist/media_muse_linux/usr/bin/
-        mv dist/media_muse_linux/usr/bin/media_muse_Linux dist/media_muse_linux/usr/bin/media-muse
-        chmod +x dist/media_muse_linux/usr/bin/media-muse
-        
-        # Create wrapper script
-        cat > dist/media_muse_linux/usr/bin/media-muse-wrapper << EOL
-        #!/bin/bash
-        export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH"
-        export QT_QPA_PLATFORM=xcb
-        exec /usr/bin/media-muse "\$@"
-        EOL
-        chmod +x dist/media_muse_linux/usr/bin/media-muse-wrapper
-        
-        # Create .desktop file
-        cat > dist/media_muse_linux/usr/share/applications/media-muse.desktop << EOL
-        [Desktop Entry]
-        Version=1.0
-        Type=Application
-        Name=Media Muse
-        Exec=/usr/bin/media-muse-wrapper
-        Icon=media-muse
-        Categories=AudioVideo;
-        EOL
-        
-        # Add your icon file (media-muse.svg) to the icons folder
-        cp media-muse.svg dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps/
-        
-        # Update control file
-        cat > dist/media_muse_linux/DEBIAN/control << EOL
-        Package: media-muse
-        Version: 1.0
-        Section: base
-        Priority: optional
-        Architecture: amd64
-        Depends: python3 (>= 3.9), libstdc++6, libgl1-mesa-glx, libegl1-mesa
-        Maintainer: Olumide Awodeji awodejiolumidekolade@gmail.com
-        Description: Media Muse Application
-         A brief description of your Media Muse application.
-         This can be multiple lines long.
-        EOL
-        
-        # Create postinst script
-        cat > dist/media_muse_linux/DEBIAN/postinst << EOL
-        #!/bin/sh
-        set -e
-        update-desktop-database
-        EOL
-        chmod 755 dist/media_muse_linux/DEBIAN/postinst
-        
-        # Build the package
-        sudo apt-get install -y fakeroot
-        fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb
-        
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: media_muse-${{ runner.os }}-installer
-        path: dist/*_installer*
-        
-    - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: dist/*_installer*
-        name: Release ${{ github.ref_name }}
-        tag_name: ${{ github.ref_name }}
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          sudo apt-get install -y libdbus-1-dev vlc libvlc-dev
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install dbus automake libtool pkg-config cmake vlc
+          export LDFLAGS="-L/opt/homebrew/opt/dbus/lib"
+          export CPPFLAGS="-I/opt/homebrew/opt/dbus/include"
+          export PKG_CONFIG_PATH="/opt/homebrew/opt/dbus/lib/pkgconfig"
+          # Ensure libvlc.dylib is found
+          ls -la /opt/homebrew/lib/libvlc.dylib || echo "libvlc.dylib not found!"
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install vlc
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Linux-specific dependencies
+        if: runner.os == 'Linux'
+        run: |
+          pip install -r requirements-linux.txt
+
+      - name: Install flake8 and PyInstaller
+        run: |
+          python -m pip install flake8 pyinstaller
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Install VLC (macOS)
+        if: runner.os == 'macOS'
+        run: brew install vlc
+
+      - name: Build with PyInstaller (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          pyinstaller --name=media_muse_Windows --add-data "src;src" --add-binary "C:\Program Files\VideoLAN\VLC\libvlc.dll;." src/main.py --icon=icon.ico
+          # Move or copy the icon to the dist folder
+          cp icon.ico dist/media_muse_windows_icon.ico
+
+      - name: Build with PyInstaller (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          VLC_PATHS=(
+            "/opt/homebrew/lib/libvlc.dylib"
+            "/usr/local/lib/libvlc.dylib"
+            "/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib"
+          )
+
+          VLC_PATH=""
+          for path in "${VLC_PATHS[@]}"; do
+            if [ -f "$path" ]; then
+              VLC_PATH="$path"
+              break
+            fi
+          done
+
+          if [ -z "$VLC_PATH" ]; then
+            echo "Error: libvlc.dylib not found. Please install VLC or specify the correct path."
+            exit 1
+          fi
+
+          echo "Using libvlc.dylib from: $VLC_PATH"
+          pyinstaller --name=media_muse_macOS --add-data "src:src" --add-binary "$VLC_PATH:." src/main.py
+
+      - name: Build with PyInstaller (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          if ! dpkg -s vlc >/dev/null 2>&1; then
+            echo "VLC not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y vlc libvlc-dev
+          else
+            echo "VLC is already installed."
+          fi
+
+          VLC_PATH=$(find /usr/lib -name "libvlc.so" | head -n 1)
+          if [ -z "$VLC_PATH" ]; then
+            echo "Error: libvlc.so not found. Please check VLC installation."
+            exit 1
+          fi
+
+          echo "Using libvlc.so from: $VLC_PATH"
+
+          # Find the system's libstdc++.so.6
+          LIBSTDCPP_PATH=$(ldconfig -p | grep libstdc++.so.6 | awk '{print $4}' | head -n 1)
+          echo "Using system libstdc++.so.6 from: $LIBSTDCPP_PATH"
+
+          pyinstaller --name=media_muse_Linux --add-data "src:src" \
+                      --add-binary "$VLC_PATH:." \
+                      --exclude-module _bootlocale \
+                      src/main.py
+
+      - name: Create Windows Installer
+        if: runner.os == 'Windows'
+        run: |
+          choco install innosetup
+          iscc /O"dist" /F"media_muse_windows_installer" "inno_setup_script.iss"
+
+      - name: Create macOS Installer
+        if: runner.os == 'macOS'
+        run: |
+          # Create .app structure
+          mkdir -p "dist/Media Muse.app/Contents/MacOS"
+          mkdir -p "dist/Media Muse.app/Contents/Resources"
+
+          # Copy the entire contents of the PyInstaller output
+          cp -R dist/media_muse_macOS/* "dist/Media Muse.app/Contents/MacOS/"
+
+          # Create Info.plist
+          cat > "dist/Media Muse.app/Contents/Info.plist" << EOL
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>Media Muse</string>
+              <key>CFBundleIconFile</key>
+              <string>media-muse.icns</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.synth.mediamuse</string>
+              <key>CFBundleName</key>
+              <string>Media Muse</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+              <key>NSPrincipalClass</key>
+              <string>NSApplication</string>
+          </dict>
+          </plist>
+          EOL
+
+          # Check if media-muse.icns exists, if not create a placeholder
+          if [ ! -f "media-muse.icns" ]; then
+            echo "media-muse.icns not found. Creating a placeholder icon."
+            # Install ImageMagick if not already available
+            brew install imagemagick
+            # Create a simple placeholder icon using command-line tools
+            convert -size 512x512 xc:none -fill white -draw "circle 256,256 256,0" \
+                    -fill black -draw "circle 256,256 224,256" \
+                    -fill white -draw "circle 256,256 192,256" \
+                    "media-muse.icns"
+          fi
+
+          # Add icon file to the Resources folder
+          cp media-muse.icns "dist/Media Muse.app/Contents/Resources/"
+
+          # Create a shell script to launch the app
+          cat > "dist/Media Muse.app/Contents/MacOS/Media Muse" << EOL
+          #!/bin/bash
+          DIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
+          "\$DIR/media_muse_macOS"
+          EOL
+          chmod +x "dist/Media Muse.app/Contents/MacOS/Media Muse"
+
+          # Create DMG
+          brew install create-dmg
+          create-dmg \
+            --volname "Media Muse Installer" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "Media Muse.app" 200 190 \
+            --hide-extension "Media Muse.app" \
+            --app-drop-link 600 185 \
+            "dist/media_muse_macOS_installer.dmg" \
+            "dist/Media Muse.app"
+
+      - name: Create Linux Installer
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist/media_muse_linux/DEBIAN
+          mkdir -p dist/media_muse_linux/usr/bin
+          mkdir -p dist/media_muse_linux/usr/share/applications
+          mkdir -p dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps
+          cp -r dist/media_muse_Linux/* dist/media_muse_linux/usr/bin/
+          mv dist/media_muse_linux/usr/bin/media_muse_Linux dist/media_muse_linux/usr/bin/media-muse
+          chmod +x dist/media_muse_linux/usr/bin/media-muse
+
+          # Create wrapper script
+          cat > dist/media_muse_linux/usr/bin/media-muse-wrapper << EOL
+          #!/bin/bash
+          export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH"
+          export QT_QPA_PLATFORM=xcb
+          exec /usr/bin/media-muse "\$@"
+          EOL
+          chmod +x dist/media_muse_linux/usr/bin/media-muse-wrapper
+
+          # Create .desktop file
+          cat > dist/media_muse_linux/usr/share/applications/media-muse.desktop << EOL
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=Media Muse
+          Exec=/usr/bin/media-muse-wrapper
+          Icon=media-muse
+          Categories=AudioVideo;
+          EOL
+
+          # Add icon file (media-muse.svg) to the icons folder
+          cp media-muse.svg dist/media_muse_linux/usr/share/icons/hicolor/scalable/apps/
+
+          # Update control file
+          cat > dist/media_muse_linux/DEBIAN/control << EOL
+          Package: media-muse
+          Version: 1.0
+          Section: base
+          Priority: optional
+          Architecture: amd64
+          Depends: python3 (>= 3.9), libstdc++6, libgl1-mesa-glx, libegl1-mesa
+          Maintainer: Olumide Awodeji awodejiolumidekolade@gmail.com
+          Description: Media Muse Application
+           A brief description of your Media Muse application.
+           This can be multiple lines long.
+          EOL
+
+          # Create postinst script
+          cat > dist/media_muse_linux/DEBIAN/postinst << EOL
+          #!/bin/sh
+          set -e
+          update-desktop-database
+          EOL
+          chmod 755 dist/media_muse_linux/DEBIAN/postinst
+
+          # Build the package
+          sudo apt-get install -y fakeroot
+          fakeroot dpkg-deb --build dist/media_muse_linux dist/media_muse_linux_installer.deb
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: media_muse-${{ runner.os }}-installer
+          path: dist/*_installer*
+
+      - name: Create Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*_installer*
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
