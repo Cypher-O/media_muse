@@ -56,7 +56,7 @@ All PRs will be reviewed by project maintainers. Feedback or questions may be pr
 
 ## License
 
-By contributing to the Screenshot App, you agree that your contributions will be licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+By contributing to the Media Muse App, you agree that your contributions will be licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
